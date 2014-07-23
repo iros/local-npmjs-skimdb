@@ -39,7 +39,8 @@ First, setup your couchdb server.
 5. Start Couch
 
   While ssh'd into vagrant box, run `sudo couchdb` or `sudo couchdb -d`
-  Verify you can reach it at http://192.168.33.31:5984/
+  Verify you can reach it at http://192.168.33.31:5984/ (the IP is setup as a private
+  network in the Vagrantfile. If you need to change it, change it there.)
 
 6. Start couch replication against skimdb:
 
