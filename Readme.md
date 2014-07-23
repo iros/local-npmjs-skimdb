@@ -45,5 +45,7 @@ First, setup your couchdb server.
 
   From a terminal window that is *not* ssh'd to the vagrant box:
 
-  `curl -X POST http://192.168.33.31:5984/_replicate -d '{"source":"https://skimdb.npmjs.com/registry/", "target":"registry", "create_target":true}' -H "Content-Type: application/json"`
+  ```bash
+  curl -X POST http://192.168.33.31:5984/_replicate -d '{"source":"https://skimdb.npmjs.com/registry/", "target":"registry", "create_target":true}' -H "Content-Type: application/json"
+  ```
 
