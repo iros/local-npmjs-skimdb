@@ -2,9 +2,15 @@
   "name": "local-npmjs-skimdb",
   "description": "A local clone of npm's skimdb + various data extraction queries",
   "version": "0.1.0",
-  "contributors": ["Irene Ros <imirene@gmail.com>"],
+  "contributors": [
+    "Irene Ros <imirene@gmail.com>"
+  ],
   "dependencies": {
-    "underscore-cli": ">= 0.2.17"
+    "underscore-cli": ">= 0.2.17",
+    "nano": "~5.10.0"
   },
-  "repository": { "type": "git", "url": "git@github.com:iros/local-npmjs-skimdb.git" }
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:iros/local-npmjs-skimdb.git"
+  }
 }
