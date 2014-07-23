@@ -10,6 +10,7 @@ probably the easiest way to go about it.
 
 First, setup your couchdb server.
 
+0. Run `npm install` if you're going to run any of the data scripts.
 1. Run `vagrant up`.
 2. Run `vagrant ssh`.
 3. Install couch:
@@ -49,4 +50,3 @@ First, setup your couchdb server.
   ```bash
   curl -X POST http://192.168.33.31:5984/_replicate -d '{"source":"https://skimdb.npmjs.com/registry/", "target":"registry", "create_target":true}' -H "Content-Type: application/json"
   ```
-
