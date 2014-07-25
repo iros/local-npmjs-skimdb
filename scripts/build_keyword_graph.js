@@ -1,24 +1,16 @@
-var fs = require('fs');
-var csv = require('fast-csv');
-var _ = require('lodash');
-var semver = require('semver-utils');
+var forAllPackages = require('./lib/for_all_packages');
+var packageUtils = require("./lib/package_utils");
 
-var meta_rows = [
-  ["target", "source", "count"]
-], doc, i = 0;
+var i = 0;
 
 var exclude=[];
 var keywords = {};
 
-function addKeyPairs(package) {
-  console.log(package);
+function addKeyPairs(package, doc) {
 
   if (exclude.indexOf(package) === -1) {
 
     try {
-      var data = fs.readFileSync('data/packages/' + package);
-
-      doc = JSON.parse(data).doc;
 
       if (doc["dist-tags"] && doc["dist-tags"].latest) {
 
@@ -49,37 +41,38 @@ function addKeyPairs(package) {
             }
           }
         }
-
       }
 
+      i++;
+
+      if (i % 500 === 0) {
+        console.log("Processed " + i + " rows");
+      }
     } catch(e) {
+      console.log(package, e);
       exclude.push(package);
     }
   }
 }
 
-fs.readdir('data/packages', function(err, files) {
-  files.splice(files.indexOf(".gitkeep"), 1);
+function transform(keywords) {
+  return function() {
 
-  files.forEach(function(f, idx) {
-    addKeyPairs(f);
-  });
+    var rows = [];
 
-
-  console.log("writing file");
-  console.log("exclude files", exclude);
-
-  // transform keys
-  Object.keys(keywords).forEach(function(joinkey) {
-    var st = joinkey.split("::");
-    meta_rows.push([
-        st[0],
-        st[1],
-        keywords[joinkey]
-      ]);
-  });
-  csv.writeToPath("data/packages_keywords_graph.csv", meta_rows, {headers: true})
-    .on('finish', function() {
-      console.log("done");
+    Object.keys(keywords).forEach(function(joinkey) {
+      var st = joinkey.split("::");
+      rows.push([
+          st[0],
+          st[1],
+          keywords[joinkey]
+        ]);
     });
-});
+
+    return rows;
+  };
+}
+
+forAllPackages(addKeyPairs, "packages_keyword_graph.csv", [
+  ["target", "source", "count"]
+], transform(keywords));
