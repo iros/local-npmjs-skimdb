@@ -1,5 +1,5 @@
+var csv = require('csv');
 var fs = require('fs');
-var csv = require('fast-csv');
 var _ = require('lodash');
 
 module.exports = function(fn, output, rows, transform) {
@@ -32,10 +32,13 @@ module.exports = function(fn, output, rows, transform) {
     }
 
     console.log("writing file");
+    csv()
+      .from(rows)
+      .to(fs.createWriteStream("data/" + output));
 
-    csv.writeToPath("data/" + output, rows, {headers: true})
-      .on('finish', function() {
-        console.log("done");
-      });
+    // csv.writeToPath("data/" + output, rows, {headers: true})
+    //   .on('finish', function() {
+    //     console.log("done");
+    //   });
   });
 };

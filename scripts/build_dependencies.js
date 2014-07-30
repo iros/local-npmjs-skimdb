@@ -1,5 +1,6 @@
 var forAllPackages = require('./lib/for_all_packages');
 var packageUtils = require("./lib/package_utils");
+var _ = require('lodash');
 
 function makeFiles(type) {
 
@@ -19,7 +20,17 @@ function makeFiles(type) {
 
         if (doc.versions && doc.versions[latest_version]) {
 
-          var dependencies = doc.versions[latest_version][type];
+          var dependencies;
+          if (type !== "both") {
+            dependencies = doc.versions[latest_version][type];
+          } else {
+            // create a merged list of both. we don't care about overwriting
+            // some, since we just want a unique set of keys.
+            dependencies = _.extend({},
+              doc.versions[latest_version].dependencies,
+              doc.versions[latest_version].devDependencies);
+          }
+
           if (dependencies) {
 
             // dependencies of this package
@@ -70,7 +81,7 @@ function makeFiles(type) {
     }
   }
 
-  visited_dict = {};
+  var visited_dict = {};
 
   function computeTransientDependents(name, pkg, visited) {
     if (typeof pkg === "undefined" || typeof pkg[2] === "undefined" || pkg[2].length === 0) {
@@ -144,3 +155,5 @@ function makeFiles(type) {
 
 makeFiles("dependencies");
 makeFiles("devDependencies");
+// a combination of dev dependencies, and regular dependencies (the set of the union.)
+makeFiles("both");
