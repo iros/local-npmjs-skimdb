@@ -20,6 +20,7 @@ function makeFiles(type) {
 
         if (doc.versions && doc.versions[latest_version]) {
 
+          // build dependency object
           var dependencies;
           if (type !== "both") {
             dependencies = doc.versions[latest_version][type];
@@ -31,41 +32,36 @@ function makeFiles(type) {
               doc.versions[latest_version].devDependencies);
           }
 
+          if (typeof deps[doc._id] === "undefined") {
+
+            // add an entry even though there are no dependencies so that when
+            // something else depends on it, we will have the count.
+            deps[doc._id] = {
+              dependents : [], dependents_count : 0
+            };
+          }
+
           if (dependencies) {
 
+
             // dependencies of this package
-            var ds = [];
-            var count = 0;
-
-            Object.keys(dependencies).forEach(function(dependency) {
-              ds.push(dependency);
-              count++;
-            });
-
-            if (deps[doc._id]) {
-
-              // add number of dependencies this package has
-              deps[doc._id][0] += count;
-
-              // add this dependency to its array of dependencies.
-              deps[doc._id][1] = ds;
-
-            } else {
-              deps[doc._id] = [count, ds, []];
-            }
+            var ds = Object.keys(dependencies);
 
             // for every dependency, go and add this package as a dependent.
             ds.forEach(function(dep) {
               if (deps[dep]) {
-                deps[dep][2].push(doc._id);
+                if (deps[dep].dependents.indexOf(doc._id) == -1) {
+                  deps[dep].dependents.push(doc._id);
+                  deps[dep].dependents_count += 1;
+                }
+                // deps[dep][2].push(doc._id);
               } else {
-                deps[dep] = [0, [], [doc._id]];
+                deps[dep] = {
+                  dependents : [doc._id],
+                  dependents_count : 1
+                };
               }
             });
-          } else {
-
-            // add an entry even though there are no dependencies.
-            deps[doc._id] = [0, [], []];
           }
         }
 
@@ -81,65 +77,78 @@ function makeFiles(type) {
     }
   }
 
-  var visited_dict = {};
+  var visited_dict = {}, d, ds;
 
-  function computeTransientDependents(name, pkg, visited) {
-    if (typeof pkg === "undefined" || typeof pkg[2] === "undefined" || pkg[2].length === 0) {
-      return 0;
+  function computeTransitiveDependents(original_name, name, queued) {
+    var row = deps[name];
+
+    if (row.dependents_count === 0) {
+      // console.log(original_name, name, "no deps, caching w zero");
+      visited_dict[name] = [0, {}];
+      return;
     } else {
-
-      // start off with length of deps.
-      var sum = pkg[2].length;
-
-      visited.push(name); // you auto visit yourself!
-
-      // visit each dependency, and aggregate its length of dependencies.
-      for (var i = 0; i < pkg[2].length; i++) {
-        var dependency = pkg[2][i];
-
-        // only visit unvisited dependencies.
-        if (visited.indexOf(dependency) === -1) {
-
-          // do we already have a cached version of this? if so, use it.
-          if (typeof visited_dict[dependency] !== "undefined") {
-            sum = sum + visited_dict[dependency];
-
-          // else, traverse down.
-          } else {
-            var dep_pkg = deps[dependency];
-            visited.push(dependency);
-            sum = sum + computeTransientDependents(dependency, deps[dependency], visited);
-          }
+      for(i = 0; i < row.dependents_count; i++) {
+        d = row.dependents[i];
+        if (typeof queued[d] === "undefined") {
+          queued[d] = 0;
         }
       }
 
-      // cache the result
-      visited_dict[name] = sum;
-      return sum;
+      ds = Object.keys(queued);
+      for(i = 0; i < ds.length; i++) {
+        d = ds[i];
+        if (queued[d] === 0) {
+          queued[d] = 1;
+
+          // if we've cached it before, just copy over the visited queue
+          // so we don't visit the same nodes again.
+          if (typeof visited_dict[d] !== "undefined") {
+            // console.log(original_name, "cache hit", d);
+            queued = _.extend(queued, visited_dict[d][1]);
+          } else {
+            // console.log(original_name, "traversing", d);
+            computeTransitiveDependents(original_name, d, queued);
+          }
+
+        }
+      }
+
+      // if we are back to where we started...
+      if (original_name == name) {
+        var keys = Object.keys(queued);
+        var n = keys.length;
+        if (keys.indexOf(original_name) !== -1) {
+          n -= 1;
+        }
+        // cache count & visited queue, so we can just copy it over.
+        visited_dict[original_name] = [n, queued];
+        row.deep_dependent_count = n;
+      }
     }
   }
-
 
   function transform(deps) {
     return function() {
 
       var rows = [];
 
+      //console.log(deps);
       // now that dependencies are computed, we need to compute the indirect
       // dependencies.
       Object.keys(deps).forEach(function(pkg) {
-        if (deps[pkg][2].length === 0) {
+        if (deps[pkg].dependents_count === 0) {
+
           // nothing depends on this, so, nothing to do here.
-          deps[pkg].push(0);
+          deps[pkg].deep_dependent_count = 0;
         } else {
-          deps[pkg].push(computeTransientDependents(pkg, deps[pkg], []));
+          computeTransitiveDependents(pkg, pkg, {});
         }
       });
 
       // convert deps to csv
       Object.keys(deps).forEach(function(pkg) {
         rows.push([
-          pkg, deps[pkg][0], deps[pkg][1], deps[pkg][2], deps[pkg][2].length, deps[pkg][3]
+          pkg, deps[pkg].dependents_count, deps[pkg].deep_dependent_count
         ]);
       });
 
@@ -148,7 +157,7 @@ function makeFiles(type) {
   }
 
   forAllPackages(computeDependencies, "packages_" + type + ".csv", [
-    ["package", "depends_on_count", "dependencies", "direct_dependents", "direct_dependents_count", "deep_dependent_count"]
+    ["package", "direct_dependents", "deep_dependent_count"]
   ], transform(deps));
 
 }

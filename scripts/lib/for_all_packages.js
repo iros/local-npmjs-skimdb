@@ -35,10 +35,5 @@ module.exports = function(fn, output, rows, transform) {
     csv()
       .from(rows)
       .to(fs.createWriteStream("data/" + output));
-
-    // csv.writeToPath("data/" + output, rows, {headers: true})
-    //   .on('finish', function() {
-    //     console.log("done");
-    //   });
   });
 };
