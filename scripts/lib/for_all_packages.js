@@ -7,7 +7,7 @@ module.exports = function(fn, output, rows, transform) {
     files.splice(files.indexOf(".gitkeep"), 1);
 
     files.forEach(function(f, idx) {
-      //if (["underscore.json","backbone.json","async.json","lodash.json"].indexOf(f) !== -1) {
+
       var data = fs.readFileSync('data/packages/' + f);
       doc = JSON.parse(data).doc;
 
@@ -23,8 +23,8 @@ module.exports = function(fn, output, rows, transform) {
             rows.push(row);
           }
         }
+
       }
-      //}
     });
 
     if (transform) {

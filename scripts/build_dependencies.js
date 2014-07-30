@@ -22,6 +22,7 @@ function makeFiles(type) {
           var dependencies = doc.versions[latest_version][type];
           if (dependencies) {
 
+            // dependencies of this package
             var ds = [];
             var count = 0;
 
@@ -31,9 +32,12 @@ function makeFiles(type) {
             });
 
             if (deps[doc._id]) {
+
+              // add number of dependencies this package has
               deps[doc._id][0] += count;
+
+              // add this dependency to its array of dependencies.
               deps[doc._id][1] = ds;
-              // leave [2] alone, we already added dependants to it.
 
             } else {
               deps[doc._id] = [count, ds, []];
@@ -47,6 +51,10 @@ function makeFiles(type) {
                 deps[dep] = [0, [], [doc._id]];
               }
             });
+          } else {
+
+            // add an entry even though there are no dependencies.
+            deps[doc._id] = [0, [], []];
           }
         }
 
@@ -62,22 +70,44 @@ function makeFiles(type) {
     }
   }
 
-  function computeTransientDependents(pkg, sum, visited) {
-    if (pkg[2].length === 0) {
-      return sum;
+  visited_dict = {};
+
+  function computeTransientDependents(name, pkg, visited) {
+    if (typeof pkg === "undefined" || typeof pkg[2] === "undefined" || pkg[2].length === 0) {
+      return 0;
     } else {
 
-      for(var i = 0; i < pkg[2].length; i++) {
-        sum += pkg[2].length;
-        if (visited.indexOf(pkg[2][i]) === -1) {
-          visited.push(pkg[2][i]);
-          return computeTransientDependents(deps[pkg[2][i]], sum, visited);
-        } else {
-          return 1;
+      // start off with length of deps.
+      var sum = pkg[2].length;
+
+      visited.push(name); // you auto visit yourself!
+
+      // visit each dependency, and aggregate its length of dependencies.
+      for (var i = 0; i < pkg[2].length; i++) {
+        var dependency = pkg[2][i];
+
+        // only visit unvisited dependencies.
+        if (visited.indexOf(dependency) === -1) {
+
+          // do we already have a cached version of this? if so, use it.
+          if (typeof visited_dict[dependency] !== "undefined") {
+            sum = sum + visited_dict[dependency];
+
+          // else, traverse down.
+          } else {
+            var dep_pkg = deps[dependency];
+            visited.push(dependency);
+            sum = sum + computeTransientDependents(dependency, deps[dependency], visited);
+          }
         }
       }
+
+      // cache the result
+      visited_dict[name] = sum;
+      return sum;
     }
   }
+
 
   function transform(deps) {
     return function() {
@@ -91,7 +121,7 @@ function makeFiles(type) {
           // nothing depends on this, so, nothing to do here.
           deps[pkg].push(0);
         } else {
-          deps[pkg].push(computeTransientDependents(deps[pkg], 0, []));
+          deps[pkg].push(computeTransientDependents(pkg, deps[pkg], []));
         }
       });
 
