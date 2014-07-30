@@ -20,7 +20,6 @@ function makeFiles(type) {
 
         if (doc.versions && doc.versions[latest_version]) {
 
-          // build dependency object
           var dependencies;
           if (type !== "both") {
             dependencies = doc.versions[latest_version][type];
@@ -32,36 +31,41 @@ function makeFiles(type) {
               doc.versions[latest_version].devDependencies);
           }
 
-          if (typeof deps[doc._id] === "undefined") {
-
-            // add an entry even though there are no dependencies so that when
-            // something else depends on it, we will have the count.
-            deps[doc._id] = {
-              dependents : [], dependents_count : 0
-            };
-          }
-
           if (dependencies) {
 
-
             // dependencies of this package
-            var ds = Object.keys(dependencies);
+            var ds = [];
+            var count = 0;
+
+            Object.keys(dependencies).forEach(function(dependency) {
+              ds.push(dependency);
+              count++;
+            });
+
+            if (deps[doc._id]) {
+
+              // add number of dependencies this package has
+              deps[doc._id][0] += count;
+
+              // add this dependency to its array of dependencies.
+              deps[doc._id][1] = ds;
+
+            } else {
+              deps[doc._id] = [count, ds, []];
+            }
 
             // for every dependency, go and add this package as a dependent.
             ds.forEach(function(dep) {
               if (deps[dep]) {
-                if (deps[dep].dependents.indexOf(doc._id) == -1) {
-                  deps[dep].dependents.push(doc._id);
-                  deps[dep].dependents_count += 1;
-                }
-                // deps[dep][2].push(doc._id);
+                deps[dep][2].push(doc._id);
               } else {
-                deps[dep] = {
-                  dependents : [doc._id],
-                  dependents_count : 1
-                };
+                deps[dep] = [0, [], [doc._id]];
               }
             });
+          } else {
+
+            // add an entry even though there are no dependencies.
+            deps[doc._id] = [0, [], []];
           }
         }
 
@@ -78,52 +82,6 @@ function makeFiles(type) {
   }
 
   var visited_dict = {};
-
-  function computeTransitiveDependents(name, visited) {
-
-    if (name === "M") { debugger; }
-    var row = deps[name];
-
-    if (row.dependents_count === 0) {
-      if (visited.indexOf(name) === -1) {
-        console.log(name, "no children, unvisited +1");
-        return 1;
-      } else {
-        console.log(name, "no children, visited 1");
-        return 0;
-      }
-    } else {
-
-      visited = visited.concat(row.dependents);
-
-      var set = [], dep_row;
-      for (var i = 0; i < row.dependents.length; i++) {
-        var d = row.dependents[i];
-        dep_row = deps[d];
-        set = set.concat(dep_row.dependents);
-      }
-      set = _.uniq(set);
-      console.log(name, "set: ", set);
-
-      var sum = row.dependents_count;
-
-      for(var j = 0; j < set.length; j++) {
-        var s = set[j];
-        visited << s;
-        if (typeof visited_dict[s] !== "undefined") {
-          console.log(s, "previously visited +", visited_dict[s]);
-          sum = sum + visited_dict[s];
-        } else {
-          console.log(s, "UNVISITED, recursion party", visited);
-          sum = sum + computeTransitiveDependents(s, visited);
-        }
-      }
-
-      row.deep_dependent_count = sum;
-      visited_dict[name] = sum;
-      return sum;
-    }
-  }
 
 
   function computeTransientDependents2(name, pkg, visited) {
@@ -181,16 +139,14 @@ function makeFiles(type) {
 
       var rows = [];
 
-      console.log(deps);
       // now that dependencies are computed, we need to compute the indirect
       // dependencies.
       Object.keys(deps).forEach(function(pkg) {
-        if (deps[pkg].dependents_count === 0) {
-
+        if (deps[pkg][2].length === 0) {
           // nothing depends on this, so, nothing to do here.
-          deps[pkg].deep_dependent_count = 0;
+          deps[pkg].push(0);
         } else {
-          computeTransitiveDependents(pkg, []);
+          deps[pkg].push(computeTransientDependents(pkg, deps[pkg], []));
         }
       });
 
@@ -199,29 +155,21 @@ function makeFiles(type) {
       // convert deps to csv
       Object.keys(deps).forEach(function(pkg) {
         rows.push([
-          pkg, deps[pkg].dependents_count, deps[pkg].deep_dependent_count
+          pkg, deps[pkg][0], deps[pkg][1], deps[pkg][2], deps[pkg][2].length, deps[pkg][3]
         ]);
       });
-
-      // computeTransitiveDependents("H", []);
-
-      // Object.keys(deps).forEach(function(pkg) {
-      //   rows.push([
-      //     pkg, deps[pkg].dependents_count, deps[pkg].deep_dependent_count
-      //   ]);
-      // });
 
       return rows;
     };
   }
 
   forAllPackages(computeDependencies, "packages_" + type + ".csv", [
-    ["package", "direct_dependents", "deep_dependent_count"]
+    ["package", "depends_on_count", "dependencies", "direct_dependents", "direct_dependents_count", "deep_dependent_count"]
   ], transform(deps));
 
 }
 
 makeFiles("dependencies");
-// makeFiles("devDependencies");
+makeFiles("devDependencies");
 // a combination of dev dependencies, and regular dependencies (the set of the union.)
-// makeFiles("both");
+makeFiles("both");

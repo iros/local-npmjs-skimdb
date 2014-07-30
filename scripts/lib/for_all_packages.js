@@ -3,12 +3,12 @@ var fs = require('fs');
 var _ = require('lodash');
 
 module.exports = function(fn, output, rows, transform) {
-  fs.readdir('data/packages', function(err, files) {
-    files.splice(files.indexOf(".gitkeep"), 1);
+  fs.readdir('data/samples', function(err, files) {
+    //files.splice(files.indexOf(".gitkeep"), 1);
 
     files.forEach(function(f, idx) {
 
-      var data = fs.readFileSync('data/packages/' + f);
+      var data = fs.readFileSync('data/samples/' + f);
       doc = JSON.parse(data).doc;
 
       var row = fn(f, doc);
