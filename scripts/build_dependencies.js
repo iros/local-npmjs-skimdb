@@ -157,7 +157,7 @@ function makeFiles(type) {
   }
 
   forAllPackages(computeDependencies, "packages_" + type + ".csv", [
-    ["package", "direct_dependents", "deep_dependent_count"]
+    ["package", "direct_dependents", "deep_dependents"]
   ], transform(deps));
 
 }
