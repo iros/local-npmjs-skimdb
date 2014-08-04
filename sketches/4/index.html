@@ -1,0 +1,59 @@
+<html>
+<head>
+  <title></title>
+  <style type="text/css">
+    #container {
+      width: 1000;
+      height: 600;
+      display: inline-block;
+      float:left;
+    }
+    #sidebar {
+      width: 400;
+      margin-left: 50px;
+      display: inline-block;
+      float:left;
+    }
+    .package-circle-main {
+      fill: none;
+      stroke: none;
+      stroke-width: 1px;
+    }
+    path.data {
+      fill:#E8E8E8;
+      stroke: #CFCFCF;
+      stroke-width: 2px;
+    }
+
+    g.grid line {
+      fill: none;
+      stroke: none;
+      stroke-width: 1px;
+    }
+    text {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="sidebar">
+    <div id="legend"></div>
+    <div id="details"></div>
+  </div>
+
+  <script type="text/javascript" src="bower_components/d3/d3.js" charset="utf-8"></script>
+  <script type="text/javascript" src="bower_components/lodash/dist/lodash.js" charset="utf-8"></script>
+  <script type="text/javascript" src="bower_components/jquery/dist/jquery.js" charset="utf-8"></script>
+
+  <script type="text/template" id="package_metadata">
+    <h3><%= package %> (<%= latest_version %>)</h3>
+    <pre><%= JSON.stringify(obj, null, 2) %></pre>
+
+
+
+  </script>
+  <script type="text/javascript" src="index.js"></script>
+
+</body>
+</html>
