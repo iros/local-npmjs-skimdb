@@ -57,16 +57,16 @@ $.when.apply($, reqs).then(function() {
 
   container = d3.select('#container');
 
-  height = 740;
+  height = 300;
   width = 1000;
-  points_per_dot = 50;
+  points_per_dot = 100;
 
   svg = container.append('svg')
     .attr({
       width: width, height: height
     });
 
-  var breakdowns = buildVersionBreakdowns(data);
+  var breakdowns = buildAgeBreakdowns(data);
 
   // compute widths
   scale = d3.scale.linear()
@@ -122,7 +122,7 @@ function drawInitialCircles(breakdowns) {
 
     textGroup.append('text')
       .attr({ x: 0, y : 20})
-      .text(d[2]);
+      .text(d[2] + "(" + d3.format("0,")(d[1]) + ", " + d3.format("0%")(d[1] / data.total)+ ")");
 
     var jj = 0;
     textGroup.append('rect')

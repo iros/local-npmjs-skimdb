@@ -2,7 +2,7 @@
 var reqs = [
   $.ajax('../../analysis/longest_running_projects.json'),
   $.ajax('../../analysis/most_mature_projects.json'),
-  $.ajax('../../analysis/most_surprisingly_valuable.json'),
+  $.ajax('../../analysis/more_than_1000_deep_packages.json'),
   $.ajax('../../analysis/most_used_projects.json'),
   $.ajax('../../analysis/most_versions.json')
 ];
