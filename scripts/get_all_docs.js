@@ -28,7 +28,7 @@ function getDocs(params) {
         }
       });
 
-      console.log("wrote", keys.join(" ,"));
+      console.log("wrote", keys.length);
       params.skip = params.skip + params.limit;
 
       getDocs(params);
