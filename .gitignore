@@ -2,3 +2,4 @@ data/packages/*.json
 node_modules
 data/*.json
 data/*.csv
+/analysis/*.json
