@@ -52,6 +52,20 @@ module.exports = {
     return num_versions;
   },
 
+  getKeywords: function(doc, latest_version) {
+    if (doc.keywords) {
+      return doc.keywords;
+    } else if (latest_version && doc.versions) {
+      if (doc.versions[latest_version]) {
+        var k = doc.versions[latest_version].keywords;
+        if (k) {
+          return k;
+        }
+      }
+    }
+    return [];
+  },
+
   getSemver: function(version) {
     var versem;
     if (version) {
