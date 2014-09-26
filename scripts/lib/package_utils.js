@@ -34,6 +34,24 @@ module.exports = {
     return maintainers;
   },
 
+  findNodeVersion: function(doc, latest_version) {
+    if (doc.engines && doc.engines.node) {
+      return doc.engines.node;
+    } else if (latest_version && doc.versions) {
+      if (doc.versions[latest_version] &&
+        doc.versions[latest_version].engines &&
+        doc.versions[latest_version].engines.node) {
+
+        if (_.isObject(doc.versions[latest_version].engines.node)) {
+          return doc.versions[latest_version].engines.node.node;
+        } else {
+          return doc.versions[latest_version].engines.node;
+        }
+      }
+    }
+    return "*";
+  },
+
   findNumberOfVersions: function(doc) {
     // find version numbers
     var num_versions;

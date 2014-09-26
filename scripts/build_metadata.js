@@ -14,6 +14,7 @@ function addRow(package, doc, data) {
     var num_versions;
     var versem;
     var keywords;
+    var node_version;
 
     try {
 
@@ -30,7 +31,10 @@ function addRow(package, doc, data) {
       versem = packageUtils.getSemver(latest_version);
 
       // get keywords
-      keywords = packageUtils.getKeywords(doc, latest_version);
+      // keywords = packageUtils.getKeywords(doc, latest_version);
+
+      // get node version
+      node_version = packageUtils.findNodeVersion(doc, latest_version);
 
       // build row
       var row = [
@@ -43,7 +47,7 @@ function addRow(package, doc, data) {
         doc.time ? doc.time.modified : doc.mtime,
         maintainers.length,
         num_versions,
-        keywords
+        node_version
       ];
 
       i++;
@@ -62,12 +66,16 @@ function addRow(package, doc, data) {
 
 forAllPackages(addRow, "packages_meta.csv", [
   ["id", "latest_version", "version_major", "version_minor", "version_patch",
-  "created", "modified", "maintainer_count", "version_count", "keywords"]
+  "created", "modified", "maintainer_count", "version_count", "node_version"]
 ], function(rows) {
-  var transformed_rows = [];
-  rows.forEach(function(r) {
-    r[9] = r[9].toString();
-    transformed_rows.push(r);
-  });
-  return transformed_rows;
+  // var transformed_rows = [];
+  // rows.forEach(function(r) {
+
+  //   // combine keywords so they don't mess up our separation
+  //   // r[10] = r[10].toString();
+  //   transformed_rows.push(r);
+  // });
+
+  // return transformed_rows;
+  return rows;
 });
