@@ -1,0 +1,21 @@
+---
+# setup vagrant machine for development
+
+- hosts: all
+  remote_user: vagrant
+  sudo: yes
+  tasks:
+    - name: make sure couch ppa is available so we get latest version
+      apt_repository: repo='ppa:couchdb/stable'
+
+    - name: update apt
+      apt: update_cache=yes
+
+    - name: make sure couchdb is installed
+      apt: name=couchdb state=present
+
+    - name: make couchdb is listening on 0.0.0.0
+      ini_file: dest=/etc/couchdb/default.ini section=httpd option=bind_address value=0.0.0.0
+
+    - name: restart couchdb
+      service: name=couchdb state=restarted
